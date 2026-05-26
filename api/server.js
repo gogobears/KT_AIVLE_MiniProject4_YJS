@@ -59,16 +59,33 @@ app.get('/bestsellers', async (req, res) => {
     }
 
     // 💡 기존 프론트엔드 데이터 형식과 동일하게 매핑
-    const books = data.item.map((book, i) => ({
-      rank: i + 1,
-      title: book.title,
-      author: book.author,
-      publisher: book.publisher,
-      price: book.priceStandard ? String(book.priceStandard) : '',
-      isbn: book.isbn13 || book.isbn || '',
-      cover: book.cover, // 도서 표지 이미지 URL
-      kyoboUrl: book.link // 프론트엔드 변수명(kyoboUrl)에 알라딘 상세 페이지 링크 매핑
-    }));
+// 💡 data.item 배열을 순회하며 프론트엔드 형식에 맞게 매핑
+    const books = data.item.map((book, i) => {
+      
+      // 1. 알라딘 상세 페이지 링크의 http를 https로 강제 변경 (Mixed Content 차단 방지)
+      const secureAladinUrl = (book.link || '').replace(/^http:/, 'https:');
+      
+      // 2. 도서 표지 이미지 URL의 http를 https로 강제 변경 (이미지 깨짐 방지)
+      const secureCoverUrl = (book.cover || '').replace(/^http:/, 'https:');
+
+      return {
+        rank: i + 1,
+        title: book.title,
+        author: book.author,
+        publisher: book.publisher,
+        // 현재 사용 중인 백엔드 형식에 맞춰 숫자를 콤마가 포함된 문자열로 변환합니다.
+        price: book.priceSales 
+          ? String(book.priceSales).replace(/\B(?=(\d{3})+(?!\d))/g, ',') 
+          : (book.priceStandard ? String(book.priceStandard).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''),
+        isbn: book.isbn13 || book.isbn || '',
+        
+        // ⚠️ 가공된 안전한 HTTPS 주소들을 각각 매핑해 줍니다.
+        cover: secureCoverUrl, 
+        kyoboUrl: secureAladinUrl, 
+        aladinUrl: secureAladinUrl,
+        pubDate: book.pubDate || ''
+      };
+    });
 
     res.json({ source: 'aladin_api', books });
 
