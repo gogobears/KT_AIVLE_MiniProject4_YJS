@@ -133,6 +133,7 @@ export default function BookListPage() {
   const [books,   setBooks]   = useState([])
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(null)
+  const [showFavoriteOnly, setShowFavoriteOnly] = useState(false)
 
   useEffect(() => { load() }, [])
 
@@ -174,6 +175,8 @@ export default function BookListPage() {
     }
   }
 
+  const filteredBooks = showFavoriteOnly ? books.filter(book => book.favorite) : books
+
   if (loading) return <div className="spinner" />
 
   return (
@@ -183,15 +186,24 @@ export default function BookListPage() {
         <div>
           <h2 style={title}>도서 목록</h2>
           {books.length > 0 && (
-            <p style={countText}>총 {books.length}권</p>
+            <p style={countText}>{showFavoriteOnly ? '즐겨찾기' : '전체'} {filteredBooks.length}권</p>
           )}
         </div>
-        <button
-          onClick={() => navigate('/books/new')}
-          style={primaryButton}
+        <div style={{display: 'flex', gap: '10px'}}>
+            <button 
+                onClick={() => setShowFavoriteOnly(prev => !prev)}
+                style={{...primaryButton, 
+                    background: showFavoriteOnly ? '#e91e63' : '#666'}}
+            >{showFavoriteOnly ? '전체 보기' : '❤️ 즐겨찾기만 보기'}
+            </button>
+            <button 
+                onClick={() => navigate('/books/new')} 
+                style={primaryButton}
         >
           + 새 도서 등록
         </button>
+        </div>
+        
       </div>
 
       {/* Error */}
@@ -215,13 +227,21 @@ export default function BookListPage() {
           </button>
         </div>
       )}
-
+      {!error && showFavoriteOnly && filteredBooks.length === 0 && (
+        <div style={emptyState}>
+            <div style={emptyIcon}>🤍</div>
+            <p style = {emptyHeading}>즐겨찾기한 도서가 없습니다.</p>
+            <p style={emptyDescription}>마음에 드는 책의 하트를 눌러보세요!</p>
+        </div>
+      )}
       {/* ── Grid ── */}
-      <div style={grid}>
-        {books.map(book => (
+      {!error && filteredBooks.length > 0 && (
+        <div style={grid}>
+        {filteredBooks.map(book => (
           <BookCard key={book.id} book={book} onDelete={handleDelete} onToggleFavorite={handleToggleFavorite} />
         ))}
       </div>
+      )}
     </div>
   )
 }
