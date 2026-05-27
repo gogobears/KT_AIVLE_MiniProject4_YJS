@@ -214,4 +214,4 @@ npm run dev
 ![alt text](image-5.png)
 
 ### 실시간 베스트셀러 (알라딘 API)
-![alt text](image-6.png)
+![alt text](image-7.png)
